@@ -362,7 +362,52 @@ class SyntaxHighDialog:
     def __pt_container__(self):
         return self.dialog
 
+class ReplaceDialog:
+    def __init__(self, title="", label_text="", label_text1="", completer=None):
+        self.future = Future()
 
+        def accept_text(buf):
+            get_app().layout.focus(ok_button)
+            buf.complete_state = None
+            return True
+
+        def accept():
+            self.future.set_result(self.text_area.text + " |`| " + self.text_area1.text)
+
+        def cancel():
+            self.future.set_result(None)
+
+        self.text_area = TextArea(
+            completer=completer,
+            multiline=False,
+            width=D(preferred=40),
+            accept_handler=accept_text,
+        )
+        self.text_area1 = TextArea(
+            completer=completer,
+            multiline=False,
+            width=D(preferred=40),
+            accept_handler=accept_text,
+        )
+
+        ok_button = Button(text="OK", handler=accept)
+        cancel_button = Button(text="Cancel", handler=cancel)
+
+        self.dialog = Dialog(
+            title=title,
+            body=HSplit(
+            [Label(text=label_text), self.text_area],
+            [Label(text=label_text1), self.text_area1],
+            ),
+            buttons=[ok_button, cancel_button],
+            width=D(preferred=80),
+            modal=True,
+        )
+
+    def __pt_container__(self):
+        return self.dialog
+    
+    
 class SyntaxLowDialog:
     def __init__(self, title="Syntax Highlighting", text=""):
         self.future = Future()
@@ -660,6 +705,16 @@ def save_as_file():
 
     ensure_future(coroutine())
 
+def replace():
+    async def coroutine():
+        dialog = ReplaceDialog(
+            title="Replace",
+            label_text="Text to replace:",
+            label_text1="Replace with:"
+        )
+        replace_result = await show_dialog_as_float(dialog)
+        text_field.text = text_field.text.replace(replace_result.split(" |`| ")[0], replace_result.split(" |`| ")[1])
+    ensure_future(coroutine())
 
 def run_menu():
     async def coroutine():
@@ -727,7 +782,7 @@ root_container = MenuContainer(
                 MenuItem("-", disabled=True),
                 MenuItem("Find", handler=do_find),
                 MenuItem("Find next", handler=do_find_next),
-                MenuItem("Replace"),
+                #MenuItem("Replace", handler=replace),
                 MenuItem("Go To", handler=do_go_to),
                 MenuItem("Select All", handler=do_select_all),
                 MenuItem("Time/Date", handler=do_time_date),
