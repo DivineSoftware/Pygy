@@ -651,10 +651,12 @@ def save_as_file():
             label_text="Enter the file name:"
         )
         global file_name
-        file_name = await show_dialog_as_float(dialog)
-        data = text_field.text
-        with open(file_name, "wb") as f:
-            f.write(data.encode("utf-8", errors="ignore"))
+        file_result = await show_dialog_as_float(dialog)
+        if file_result != "":
+            file_name = file_result
+            data = text_field.text
+            with open(file_name, "wb") as f:
+                f.write(data.encode("utf-8", errors="ignore"))
 
     ensure_future(coroutine())
 
